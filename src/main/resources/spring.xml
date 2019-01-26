@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-lazy-init="true">
+
+    <bean id="dateFormat" class="java.text.DateFormat" factory-method="getDateTimeInstance"/>
+
+    <bean id="event" class="com.epam.springcore.Event" scope="prototype">
+       <constructor-arg>
+           <bean class="java.util.Date"/>
+       </constructor-arg>
+       <constructor-arg ref="dateFormat"/>
+    </bean>
+
+    <bean id="client"
+          class="com.epam.springcore.Client" scope="prototype">
+        <constructor-arg index="0" type="java.lang.Integer" value="${client.id}"/>
+        <constructor-arg index="1" type="java.lang.String" value="${client.name}"/>
+        <property name="greeting" value="${client.greeting}"/>
+    </bean>
+
+    <util:map id="loggerMap">
+        <entry key="INFO" value-ref="consoleEventLogger"/>
+        <entry key="ERROR" value-ref="combinedEventLogger"/>
+    </util:map>
+
+    <bean id="app" class="com.epam.springcore.App">
+        <constructor-arg ref="client"/>
+        <constructor-arg ref="#{T(com.epam.springcore.Event).isDay() ? fileEventLogger : consoleEventLogger} "/>
+        <constructor-arg ref="loggerMap"/>
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:client.properties</value>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="systemPropertiesMode" value="2"/>
+    </bean>
+
+    <import resource="loggers.xml"/>
+</beans>
